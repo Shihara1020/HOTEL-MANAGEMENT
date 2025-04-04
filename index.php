@@ -53,7 +53,7 @@ $allRooms = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Management System</title>
+    <title>WD REST</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="style.css">
@@ -64,7 +64,7 @@ $allRooms = $stmt->fetchAll();
             <div class="menu-toggle">
                 <i class="fas fa-bars"></i>
             </div>
-            <h1>Hotel Management System</h1>
+            <h1>WD REST MANAGEMENT SYSTERM</h1>
             <nav>
                 <ul>
                     <li><a href="#customers"><i class="fas fa-users"></i> Customers</a></li>
