@@ -157,7 +157,8 @@ $allRooms = $stmt->fetchAll();
                                     <form method="POST" style="display:inline;">
                                         <input type="hidden" name="action" value="delete_customer">
                                         <input type="hidden" name="id" value="<?= $customer['id'] ?>">
-                                        <button type="submit" class="btn btn-danger">
+                                        <button type="submit" class="btn btn-danger" 
+                                onclick="return confirm('Are you sure you want to delete this customer and all their bookings/payments?')">
                                             <i class="fas fa-trash"></i> Remove
                                         </button>
                                     </form>

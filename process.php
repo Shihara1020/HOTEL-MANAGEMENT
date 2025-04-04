@@ -7,7 +7,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         switch ($action) {
             case 'add_customer':
-                // Add customer
                 $stmt = $pdo->prepare("
                     INSERT INTO customers (name, phone, id_number, room_number, room_type, check_in, check_out)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -30,21 +29,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
                 
             case 'delete_customer':
-                // Get room number before deleting
-                $stmt = $pdo->prepare("SELECT room_number FROM customers WHERE id = ?");
-                $stmt->execute([$_POST['id']]);
-                $customer = $stmt->fetch();
+                // Start transaction
+                $pdo->beginTransaction();
                 
-                // Delete customer
-                $stmt = $pdo->prepare("DELETE FROM customers WHERE id = ?");
-                $stmt->execute([$_POST['id']]);
-                
-                // Update room status to available
-                if ($customer) {
-                    $stmt = $pdo->prepare("
-                        UPDATE rooms SET status = 'available' WHERE room_number = ?
-                    ");
-                    $stmt->execute([$customer['room_number']]);
+                try {
+                    // First delete related bookings
+                    $stmt = $pdo->prepare("DELETE FROM bookings WHERE customer_id = ?");
+                    $stmt->execute([$_POST['id']]);
+                    
+                    // Then delete related payments
+                    $stmt = $pdo->prepare("DELETE FROM payments WHERE customer_id = ?");
+                    $stmt->execute([$_POST['id']]);
+                    
+                    // Get room number before deleting customer
+                    $stmt = $pdo->prepare("SELECT room_number FROM customers WHERE id = ?");
+                    $stmt->execute([$_POST['id']]);
+                    $customer = $stmt->fetch();
+                    
+                    // Delete customer
+                    $stmt = $pdo->prepare("DELETE FROM customers WHERE id = ?");
+                    $stmt->execute([$_POST['id']]);
+                    
+                    // Update room status to available
+                    if ($customer) {
+                        $stmt = $pdo->prepare("
+                            UPDATE rooms SET status = 'available' WHERE room_number = ?
+                        ");
+                        $stmt->execute([$customer['room_number']]);
+                    }
+                    
+                    // Commit transaction
+                    $pdo->commit();
+                } catch (Exception $e) {
+                    // Rollback if any error occurs
+                    $pdo->rollBack();
+                    die("Error: " . $e->getMessage());
                 }
                 break;
                 
