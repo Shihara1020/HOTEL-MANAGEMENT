@@ -43,10 +43,10 @@ $pdf->AddPage();
 
 // Hotel information
 $pdf->SetFont('helvetica', 'B', 16);
-$pdf->Cell(0, 10, 'Grand Hotel', 0, 1, 'C');
+$pdf->Cell(0, 10, 'WD REST', 0, 1, 'C');
 $pdf->SetFont('helvetica', '', 12);
-$pdf->Cell(0, 6, '123 Luxury Street, Hotel District', 0, 1, 'C');
-$pdf->Cell(0, 6, 'Phone: (123) 456-7890 | Email: info@grandhotel.com', 0, 1, 'C');
+$pdf->Cell(0, 6, '137/A/5 sinhapura athgala,Gampola', 0, 1, 'C');
+$pdf->Cell(0, 6, 'Phone: 076 7768689 | Email: info@grandhotel.com', 0, 1, 'C');
 $pdf->Ln(10);
 
 // Receipt title
@@ -90,12 +90,12 @@ $pdf->Cell(40, 6, 'Nights Stayed:', 0, 0);
 $pdf->Cell(0, 6, $nights, 0, 1);
 
 $pdf->Cell(40, 6, 'Amount:', 0, 0);
-$pdf->Cell(0, 6, '$' . number_format($payment['amount'], 2), 0, 1);
+$pdf->Cell(0, 6, 'RS' . number_format($payment['amount'], 2), 0, 1);
 $pdf->Ln(10);
 
 // Thank you message
 $pdf->SetFont('helvetica', 'I', 10);
-$pdf->Cell(0, 6, 'Thank you for choosing Grand Hotel!', 0, 1, 'C');
+$pdf->Cell(0, 6, 'Thank you for choosing WD REST!', 0, 1, 'C');
 $pdf->Cell(0, 6, 'We hope to see you again soon.', 0, 1, 'C');
 
 // Output the PDF

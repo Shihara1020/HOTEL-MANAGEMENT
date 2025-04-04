@@ -233,7 +233,7 @@ $allRooms = $stmt->fetchAll();
                             <tr>
                                 <td><?= htmlspecialchars($room['room_number']) ?></td>
                                 <td><?= htmlspecialchars($room['room_type']) ?></td>
-                                <td>$<?= number_format($room['price_per_night'], 2) ?></td>
+                                <td>RS. <?= number_format($room['price_per_night'], 2) ?></td>
                                 <td><?= $room['max_occupancy'] ?></td>
                                 <td>
                                     <span class="status-badge <?= $room['status'] ?>">
@@ -316,7 +316,7 @@ $allRooms = $stmt->fetchAll();
                             <tr>
                                 <td><?= htmlspecialchars($payment['name']) ?></td>
                                 <td><?= htmlspecialchars($payment['room_number']) ?></td>
-                                <td>$<?= number_format($payment['amount'], 2) ?></td>
+                                <td>RS. <?= number_format($payment['amount'], 2) ?></td>
                                 <td>
                                     <span class="payment-method">
                                         <?php 
@@ -345,7 +345,7 @@ $allRooms = $stmt->fetchAll();
                         <tfoot>
                             <tr>
                                 <td colspan="2"><strong>Total</strong></td>
-                                <td><strong>$<?= number_format(array_sum(array_column($payments, 'amount')), 2) ?></strong></td>
+                                <td><strong>RS. <?= number_format(array_sum(array_column($payments, 'amount')), 2) ?></strong></td>
                                 <td colspan="3"></td>
                             </tr>
                         </tfoot>
@@ -432,7 +432,7 @@ $allRooms = $stmt->fetchAll();
                     <div class="report-card">
                         <h3>Monthly Income</h3>
                         <div class="income-display">
-                            <span class="amount">$<?= number_format($monthlyIncome, 2) ?></span>
+                            <span class="amount">RS. <?= number_format($monthlyIncome, 2) ?></span>
                             <span class="month"><?= date('F Y') ?></span>
                         </div>
                     </div>
@@ -486,9 +486,9 @@ $allRooms = $stmt->fetchAll();
                             foreach ($monthlyHistory as $history): ?>
                             <tr>
                                 <td><?= date('F Y', strtotime($history['month'] . '-01')) ?></td>
-                                <td>$<?= number_format($history['total'], 2) ?></td>
+                                <td>RS. <?= number_format($history['total'], 2) ?></td>
                                 <td><?= $history['count'] ?></td>
-                                <td>$<?= number_format($history['average'], 2) ?></td>
+                                <td>RS. <?= number_format($history['average'], 2) ?></td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
