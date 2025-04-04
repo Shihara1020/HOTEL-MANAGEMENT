@@ -17,4 +17,7 @@ try {
 } catch (\PDOException $e) {
     throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
+
+// TCPDF for PDF generation
+require_once('tcpdf/tcpdf.php');
 ?>

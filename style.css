@@ -2,6 +2,7 @@
     --primary-color: #3498db;
     --secondary-color: #2ecc71;
     --danger-color: #e74c3c;
+    --warning-color: #f39c12;
     --dark-color: #2c3e50;
     --light-color: #ecf0f1;
     --gray-color: #95a5a6;
@@ -33,11 +34,21 @@ header {
     color: var(--white-color);
     padding: 1rem 0;
     margin-bottom: 2rem;
+    position: relative;
 }
 
 header h1 {
     text-align: center;
     margin-bottom: 1rem;
+}
+
+.menu-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: none;
 }
 
 nav ul {
@@ -54,6 +65,9 @@ nav a {
     padding: 0.5rem 1rem;
     border-radius: 4px;
     transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 nav a:hover {
@@ -91,12 +105,18 @@ nav a:hover {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
 }
 
 .btn {
@@ -109,6 +129,9 @@ nav a:hover {
     cursor: pointer;
     font-size: 1rem;
     transition: background-color 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .btn:hover {
@@ -131,14 +154,31 @@ nav a:hover {
     background-color: #27ae60;
 }
 
+.btn-edit {
+    background-color: var(--primary-color);
+    margin-right: 0.5rem;
+}
+
+.btn-edit:hover {
+    background-color: #2980b9;
+}
+
+.btn-warning {
+    background-color: var(--warning-color);
+}
+
+.btn-warning:hover {
+    background-color: #e67e22;
+}
+
 .table-container {
     overflow-x: auto;
+    margin-top: 1.5rem;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
 }
 
 table th,
@@ -163,21 +203,31 @@ table tr:hover {
     border-radius: 4px;
     font-size: 0.875rem;
     font-weight: 500;
+    color: white;
 }
 
 .status-badge.pending {
-    background-color: #f39c12;
-    color: white;
+    background-color: var(--warning-color);
 }
 
 .status-badge.confirmed {
     background-color: var(--secondary-color);
-    color: white;
 }
 
 .status-badge.cancelled {
     background-color: var(--danger-color);
-    color: white;
+}
+
+.status-badge.available {
+    background-color: var(--secondary-color);
+}
+
+.status-badge.occupied {
+    background-color: var(--danger-color);
+}
+
+.status-badge.maintenance {
+    background-color: var(--warning-color);
 }
 
 .booking-container {
@@ -201,6 +251,63 @@ table tr:hover {
     box-shadow: var(--shadow);
 }
 
+.calendar-header {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.calendar-weekdays {
+    display: contents;
+    font-weight: bold;
+    text-align: center;
+}
+
+.calendar-weekdays div {
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.calendar-days {
+    display: contents;
+}
+
+.calendar-day {
+    padding: 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.calendar-day:hover {
+    background-color: #f0f0f0;
+}
+
+.calendar-day.today {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.calendar-day.selected {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.calendar-day.booked {
+    background-color: var(--danger-color);
+    color: white;
+    cursor: not-allowed;
+}
+
+.calendar-day.empty {
+    visibility: hidden;
+}
+
 .report-container {
     display: flex;
     gap: 2rem;
@@ -217,12 +324,14 @@ table tr:hover {
 }
 
 .income-display,
-.guests-display {
+.guests-display,
+.occupancy-display {
     margin-top: 1rem;
 }
 
 .amount,
-.count {
+.count,
+.rate {
     font-size: 2.5rem;
     font-weight: bold;
     color: var(--primary-color);
@@ -235,6 +344,76 @@ table tr:hover {
     margin-top: 0.5rem;
 }
 
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 1;
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.close-modal {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--gray-color);
+}
+
+.close-modal:hover {
+    color: var(--dark-color);
+}
+
+.modal-body {
+    padding: 1rem;
+}
+
 footer {
     text-align: center;
     padding: 1.5rem 0;
@@ -244,15 +423,42 @@ footer {
 
 /* Responsive Styles */
 @media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+    
+    nav ul {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: var(--dark-color);
+        z-index: 100;
+        padding: 1rem;
+    }
+    
+    nav ul.active {
+        display: flex;
+    }
+    
+    nav ul li {
+        width: 100%;
+    }
+    
+    nav a {
+        justify-content: center;
+    }
+    
     .booking-container,
     .report-container {
         flex-direction: column;
     }
     
-    nav ul {
+    .form-row {
         flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
+        gap: 0;
     }
     
     .form-group input,
@@ -262,6 +468,16 @@ footer {
     
     .btn {
         padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    table {
+        font-size: 0.875rem;
+    }
+    
+    table th,
+    table td {
+        padding: 0.5rem;
     }
 }
 
