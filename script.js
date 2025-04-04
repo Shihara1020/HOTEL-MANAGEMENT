@@ -233,4 +233,15 @@ function showModal(title, content) {
             });
         };
     }
+
+
+    // Add confirmation to all cancel buttons
+    document.querySelectorAll('form[action="cancel_booking"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Are you sure you want to cancel this booking?')) {
+                e.preventDefault();
+            }
+        });
+    });
+
 }
