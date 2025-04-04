@@ -39,6 +39,14 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$today]);
 $upcomingBookings = $stmt->fetchAll();
+
+// Available rooms
+$stmt = $pdo->query("SELECT * FROM rooms WHERE status = 'available' ORDER BY room_number");
+$availableRooms = $stmt->fetchAll();
+
+// All rooms for management
+$stmt = $pdo->query("SELECT * FROM rooms ORDER BY room_number");
+$allRooms = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -53,13 +61,17 @@ $upcomingBookings = $stmt->fetchAll();
 <body>
     <div class="container">
         <header>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
             <h1>Hotel Management System</h1>
             <nav>
                 <ul>
-                    <li><a href="#customers">Customers</a></li>
-                    <li><a href="#payments">Payments</a></li>
-                    <li><a href="#bookings">Bookings</a></li>
-                    <li><a href="#reports">Reports</a></li>
+                    <li><a href="#customers"><i class="fas fa-users"></i> Customers</a></li>
+                    <li><a href="#rooms"><i class="fas fa-door-open"></i> Rooms</a></li>
+                    <li><a href="#payments"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
+                    <li><a href="#bookings"><i class="fas fa-calendar-alt"></i> Bookings</a></li>
+                    <li><a href="#reports"><i class="fas fa-chart-line"></i> Reports</a></li>
                 </ul>
             </nav>
         </header>
@@ -85,7 +97,24 @@ $upcomingBookings = $stmt->fetchAll();
                         </div>
                         <div class="form-group">
                             <label for="room_number">Room Number:</label>
-                            <input type="text" id="room_number" name="room_number" required>
+                            <select id="room_number" name="room_number" required onchange="updateRoomDetails()">
+                                <option value="">Select Room</option>
+                                <?php foreach ($availableRooms as $room): ?>
+                                <option value="<?= $room['room_number'] ?>" 
+                                        data-type="<?= $room['room_type'] ?>"
+                                        data-price="<?= $room['price_per_night'] ?>">
+                                    <?= $room['room_number'] ?> (<?= $room['room_type'] ?> - $<?= $room['price_per_night'] ?>/night)
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="room_type">Room Type:</label>
+                            <input type="text" id="room_type" name="room_type" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="room_price">Price Per Night:</label>
+                            <input type="text" id="room_price" name="room_price" readonly>
                         </div>
                         <div class="form-group">
                             <label for="check_in">Check-in Date:</label>
@@ -108,6 +137,7 @@ $upcomingBookings = $stmt->fetchAll();
                                 <th>Phone</th>
                                 <th>ID Number</th>
                                 <th>Room No.</th>
+                                <th>Room Type</th>
                                 <th>Check-in</th>
                                 <th>Check-out</th>
                                 <th>Actions</th>
@@ -120,13 +150,106 @@ $upcomingBookings = $stmt->fetchAll();
                                 <td><?= htmlspecialchars($customer['phone']) ?></td>
                                 <td><?= htmlspecialchars($customer['id_number']) ?></td>
                                 <td><?= htmlspecialchars($customer['room_number']) ?></td>
+                                <td><?= htmlspecialchars($customer['room_type']) ?></td>
                                 <td><?= date('M j, Y', strtotime($customer['check_in'])) ?></td>
                                 <td><?= date('M j, Y', strtotime($customer['check_out'])) ?></td>
                                 <td>
                                     <form method="POST" style="display:inline;">
                                         <input type="hidden" name="action" value="delete_customer">
                                         <input type="hidden" name="id" value="<?= $customer['id'] ?>">
-                                        <button type="submit" class="btn btn-danger">Remove</button>
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Room Management Section -->
+            <section id="rooms" class="card">
+                <h2><i class="fas fa-door-open"></i> Room Management</h2>
+                
+                <div class="form-container">
+                    <form id="roomForm" method="POST">
+                        <input type="hidden" name="action" value="add_room">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="new_room_number">Room Number:</label>
+                                <input type="text" id="new_room_number" name="room_number" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new_room_type">Room Type:</label>
+                                <select id="new_room_type" name="room_type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Standard">Standard</option>
+                                    <option value="Deluxe">Deluxe</option>
+                                    <option value="Suite">Suite</option>
+                                    <option value="Executive">Executive</option>
+                                    <option value="Presidential">Presidential</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="price_per_night">Price Per Night:</label>
+                                <input type="number" id="price_per_night" name="price_per_night" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="max_occupancy">Max Occupancy:</label>
+                                <input type="number" id="max_occupancy" name="max_occupancy" min="1" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="amenities">Amenities:</label>
+                            <textarea id="amenities" name="amenities" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description:</label>
+                            <textarea id="description" name="description" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn">Add Room</button>
+                    </form>
+                </div>
+
+                <div class="table-container">
+                    <h3>Room Inventory</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Room No.</th>
+                                <th>Type</th>
+                                <th>Price/Night</th>
+                                <th>Occupancy</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($allRooms as $room): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($room['room_number']) ?></td>
+                                <td><?= htmlspecialchars($room['room_type']) ?></td>
+                                <td>RS. <?= number_format($room['price_per_night'], 2) ?></td>
+                                <td><?= $room['max_occupancy'] ?></td>
+                                <td>
+                                    <span class="status-badge <?= $room['status'] ?>">
+                                        <?= ucfirst($room['status']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button onclick="editRoom(<?= $room['id'] ?>)" class="btn btn-edit">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <form method="POST" style="display:inline;">
+                                        <input type="hidden" name="action" value="delete_room">
+                                        <input type="hidden" name="id" value="<?= $room['id'] ?>">
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
@@ -161,6 +284,16 @@ $upcomingBookings = $stmt->fetchAll();
                             <label for="payment_date">Payment Date:</label>
                             <input type="text" id="payment_date" name="payment_date" class="datepicker" required>
                         </div>
+                        <div class="form-group">
+                            <label for="payment_method">Payment Method:</label>
+                            <select id="payment_method" name="payment_method" required>
+                                <option value="cash">Cash</option>
+                                <option value="credit_card">Credit Card</option>
+                                <option value="debit_card">Debit Card</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
                         <button type="submit" class="btn">Record Payment</button>
                     </form>
                 </div>
@@ -173,6 +306,7 @@ $upcomingBookings = $stmt->fetchAll();
                                 <th>Customer</th>
                                 <th>Room No.</th>
                                 <th>Amount</th>
+                                <th>Method</th>
                                 <th>Date</th>
                                 <th>Receipt</th>
                             </tr>
@@ -182,7 +316,23 @@ $upcomingBookings = $stmt->fetchAll();
                             <tr>
                                 <td><?= htmlspecialchars($payment['name']) ?></td>
                                 <td><?= htmlspecialchars($payment['room_number']) ?></td>
-                                <td>$<?= number_format($payment['amount'], 2) ?></td>
+                                <td>RS. <?= number_format($payment['amount'], 2) ?></td>
+                                <td>
+                                    <span class="payment-method">
+                                        <?php 
+                                        $method = $payment['payment_method'];
+                                        $icon = '';
+                                        switch($method) {
+                                            case 'credit_card': $icon = '<i class="fas fa-credit-card"></i>'; break;
+                                            case 'debit_card': $icon = '<i class="fas fa-credit-card"></i>'; break;
+                                            case 'bank_transfer': $icon = '<i class="fas fa-university"></i>'; break;
+                                            case 'cash': $icon = '<i class="fas fa-money-bill-wave"></i>'; break;
+                                            default: $icon = '<i class="fas fa-question-circle"></i>';
+                                        }
+                                        echo $icon . ' ' . ucfirst(str_replace('_', ' ', $method));
+                                        ?>
+                                    </span>
+                                </td>
                                 <td><?= date('M j, Y', strtotime($payment['payment_date'])) ?></td>
                                 <td>
                                     <button onclick="printReceipt(<?= $payment['id'] ?>)" class="btn btn-receipt">
@@ -195,8 +345,8 @@ $upcomingBookings = $stmt->fetchAll();
                         <tfoot>
                             <tr>
                                 <td colspan="2"><strong>Total</strong></td>
-                                <td><strong>$<?= number_format(array_sum(array_column($payments, 'amount')), 2) ?></strong></td>
-                                <td colspan="2"></td>
+                                <td><strong>RS. <?= number_format(array_sum(array_column($payments, 'amount')), 2) ?></strong></td>
+                                <td colspan="3"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -227,7 +377,15 @@ $upcomingBookings = $stmt->fetchAll();
                             </div>
                             <div class="form-group">
                                 <label for="booking_room_number">Room Number:</label>
-                                <input type="text" id="booking_room_number" name="room_number" required>
+                                <select id="booking_room_number" name="room_number" required>
+                                    <option value="">Select Room</option>
+                                    <?php foreach ($availableRooms as $room): ?>
+                                    <option value="<?= $room['room_number'] ?>" data-type="<?= $room['room_type'] ?>">
+                                        <?= $room['room_number'] ?> (<?= $room['room_type'] ?>)
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <input type="hidden" id="booking_room_type" name="room_type">
                             </div>
                             <button type="submit" class="btn">Confirm Booking</button>
                         </form>
@@ -242,6 +400,7 @@ $upcomingBookings = $stmt->fetchAll();
                                 <th>Customer</th>
                                 <th>Phone</th>
                                 <th>Room No.</th>
+                                <th>Room Type</th>
                                 <th>Booking Date</th>
                                 <th>Status</th>
                             </tr>
@@ -252,6 +411,7 @@ $upcomingBookings = $stmt->fetchAll();
                                 <td><?= htmlspecialchars($booking['name']) ?></td>
                                 <td><?= htmlspecialchars($booking['phone']) ?></td>
                                 <td><?= htmlspecialchars($booking['room_number']) ?></td>
+                                <td><?= htmlspecialchars($booking['room_type']) ?></td>
                                 <td><?= date('M j, Y', strtotime($booking['booking_date'])) ?></td>
                                 <td>
                                     <span class="status-badge <?= $booking['status'] ?>">
@@ -272,7 +432,7 @@ $upcomingBookings = $stmt->fetchAll();
                     <div class="report-card">
                         <h3>Monthly Income</h3>
                         <div class="income-display">
-                            <span class="amount">$<?= number_format($monthlyIncome, 2) ?></span>
+                            <span class="amount">RS. <?= number_format($monthlyIncome, 2) ?></span>
                             <span class="month"><?= date('F Y') ?></span>
                         </div>
                     </div>
@@ -281,6 +441,20 @@ $upcomingBookings = $stmt->fetchAll();
                         <div class="guests-display">
                             <span class="count"><?= count($customers) ?></span>
                             <span class="label">Active Guests</span>
+                        </div>
+                    </div>
+                    <div class="report-card">
+                        <h3>Room Occupancy</h3>
+                        <div class="occupancy-display">
+                            <span class="rate">
+                                <?php 
+                                $totalRooms = count($allRooms);
+                                $occupiedRooms = count(array_filter($allRooms, fn($room) => $room['status'] === 'occupied'));
+                                $occupancyRate = $totalRooms > 0 ? ($occupiedRooms / $totalRooms) * 100 : 0;
+                                echo number_format($occupancyRate, 1) . '%';
+                                ?>
+                            </span>
+                            <span class="label">Occupancy Rate</span>
                         </div>
                     </div>
                 </div>
@@ -292,13 +466,18 @@ $upcomingBookings = $stmt->fetchAll();
                             <tr>
                                 <th>Month</th>
                                 <th>Total Income</th>
+                                <th>Booking Count</th>
+                                <th>Average Payment</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
                             $stmt = $pdo->query("
-                                SELECT DATE_FORMAT(payment_date, '%Y-%m') as month, 
-                                       SUM(amount) as total 
+                                SELECT 
+                                    DATE_FORMAT(payment_date, '%Y-%m') as month, 
+                                    SUM(amount) as total,
+                                    COUNT(*) as count,
+                                    AVG(amount) as average
                                 FROM payments 
                                 GROUP BY DATE_FORMAT(payment_date, '%Y-%m')
                                 ORDER BY month DESC
@@ -307,7 +486,9 @@ $upcomingBookings = $stmt->fetchAll();
                             foreach ($monthlyHistory as $history): ?>
                             <tr>
                                 <td><?= date('F Y', strtotime($history['month'] . '-01')) ?></td>
-                                <td>$<?= number_format($history['total'], 2) ?></td>
+                                <td>RS. <?= number_format($history['total'], 2) ?></td>
+                                <td><?= $history['count'] ?></td>
+                                <td>RS. <?= number_format($history['average'], 2) ?></td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
