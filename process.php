@@ -147,6 +147,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['id']
                 ]);
                 break;
+
+            case 'cancel_booking':
+                    try {
+                        // Mark booking as cancelled
+                        $stmt = $pdo->prepare("
+                            UPDATE bookings 
+                            SET status = 'cancelled'
+                            WHERE id = ?
+                        ");
+                        $stmt->execute([$_POST['id']]);
+                        
+                        // Optional: Make room available if needed
+                        // $stmt = $pdo->prepare("UPDATE rooms SET status = 'available' WHERE room_number = ?");
+                        // $stmt->execute([$room_number]);
+                    } catch (Exception $e) {
+                        die("Error cancelling booking: " . $e->getMessage());
+                    }
+                    break;
+
+
+
+
+
+
+
         }
         
         // Redirect back to prevent form resubmission

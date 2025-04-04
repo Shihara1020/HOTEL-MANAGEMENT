@@ -393,37 +393,49 @@ $allRooms = $stmt->fetchAll();
                     </div>
                 </div>
 
-                <div class="table-container">
-                    <h3>Upcoming Bookings</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Phone</th>
-                                <th>Room No.</th>
-                                <th>Room Type</th>
-                                <th>Booking Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($upcomingBookings as $booking): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($booking['name']) ?></td>
-                                <td><?= htmlspecialchars($booking['phone']) ?></td>
-                                <td><?= htmlspecialchars($booking['room_number']) ?></td>
-                                <td><?= htmlspecialchars($booking['room_type']) ?></td>
-                                <td><?= date('M j, Y', strtotime($booking['booking_date'])) ?></td>
-                                <td>
-                                    <span class="status-badge <?= $booking['status'] ?>">
-                                        <?= ucfirst($booking['status']) ?>
-                                    </span>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                <!-- Upcoming Bookings Table -->
+<div class="table-container">
+    <h3>Upcoming Bookings</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Room No.</th>
+                <th>Room Type</th>
+                <th>Booking Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($upcomingBookings as $booking): ?>
+            <tr>
+                <td><?= htmlspecialchars($booking['name']) ?></td>
+                <td><?= htmlspecialchars($booking['phone']) ?></td>
+                <td><?= htmlspecialchars($booking['room_number']) ?></td>
+                <td><?= htmlspecialchars($booking['room_type']) ?></td>
+                <td><?= date('M j, Y', strtotime($booking['booking_date'])) ?></td>
+                <td>
+                    <span class="status-badge <?= $booking['status'] ?>">
+                        <?= ucfirst($booking['status']) ?>
+                    </span>
+                </td>
+                <td>
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="action" value="cancel_booking">
+                        <input type="hidden" name="id" value="<?= $booking['id'] ?>">
+                        <button type="submit" class="btn btn-warning" 
+                                onclick="return confirm('Are you sure you want to cancel this booking?')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
             </section>
 
             <!-- Reports Section -->
