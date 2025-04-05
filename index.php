@@ -438,6 +438,32 @@ $allRooms = $stmt->fetchAll();
 </div>
             </section>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
             <!-- Reports Section -->
             <section id="reports" class="card">
                 <h2><i class="fas fa-chart-line"></i> Reports</h2>
