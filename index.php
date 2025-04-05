@@ -30,15 +30,10 @@ $monthlyIncome = $stmt->fetch()['total'] ?? 0;
 
 // Upcoming bookings
 $today = date('Y-m-d');
-$stmt = $pdo->prepare("
-    SELECT b.*, c.name, c.phone 
-    FROM bookings b 
-    JOIN customers c ON b.customer_id = c.id 
-    WHERE b.booking_date >= ? AND b.status = 'confirmed'
-    ORDER BY b.booking_date ASC
-");
-$stmt->execute([$today]);
+$stmt = $pdo->prepare("SELECT * FROM onlinebookings ORDER BY created_at DESC");
+$stmt->execute();
 $upcomingBookings = $stmt->fetchAll();
+
 
 // Available rooms
 $stmt = $pdo->query("SELECT * FROM rooms WHERE status = 'available' ORDER BY room_number");
@@ -50,6 +45,7 @@ $allRooms = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -58,6 +54,7 @@ $allRooms = $stmt->fetchAll();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -100,11 +97,11 @@ $allRooms = $stmt->fetchAll();
                             <select id="room_number" name="room_number" required onchange="updateRoomDetails()">
                                 <option value="">Select Room</option>
                                 <?php foreach ($availableRooms as $room): ?>
-                                <option value="<?= $room['room_number'] ?>" 
+                                    <option value="<?= $room['room_number'] ?>"
                                         data-type="<?= $room['room_type'] ?>"
                                         data-price="<?= $room['price_per_night'] ?>">
-                                    <?= $room['room_number'] ?> (<?= $room['room_type'] ?> - $<?= $room['price_per_night'] ?>/night)
-                                </option>
+                                        <?= $room['room_number'] ?> (<?= $room['room_type'] ?> - $<?= $room['price_per_night'] ?>/night)
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -145,25 +142,25 @@ $allRooms = $stmt->fetchAll();
                         </thead>
                         <tbody>
                             <?php foreach ($customers as $customer): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($customer['name']) ?></td>
-                                <td><?= htmlspecialchars($customer['phone']) ?></td>
-                                <td><?= htmlspecialchars($customer['id_number']) ?></td>
-                                <td><?= htmlspecialchars($customer['room_number']) ?></td>
-                                <td><?= htmlspecialchars($customer['room_type']) ?></td>
-                                <td><?= date('M j, Y', strtotime($customer['check_in'])) ?></td>
-                                <td><?= date('M j, Y', strtotime($customer['check_out'])) ?></td>
-                                <td>
-                                    <form method="POST" style="display:inline;">
-                                        <input type="hidden" name="action" value="delete_customer">
-                                        <input type="hidden" name="id" value="<?= $customer['id'] ?>">
-                                        <button type="submit" class="btn btn-danger" 
-                                onclick="return confirm('Are you sure you want to delete this customer and all their bookings/payments?')">
-                                            <i class="fas fa-trash"></i> Remove
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td><?= htmlspecialchars($customer['name']) ?></td>
+                                    <td><?= htmlspecialchars($customer['phone']) ?></td>
+                                    <td><?= htmlspecialchars($customer['id_number']) ?></td>
+                                    <td><?= htmlspecialchars($customer['room_number']) ?></td>
+                                    <td><?= htmlspecialchars($customer['room_type']) ?></td>
+                                    <td><?= date('M j, Y', strtotime($customer['check_in'])) ?></td>
+                                    <td><?= date('M j, Y', strtotime($customer['check_out'])) ?></td>
+                                    <td>
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="action" value="delete_customer">
+                                            <input type="hidden" name="id" value="<?= $customer['id'] ?>">
+                                            <button type="submit" class="btn btn-danger"
+                                                onclick="return confirm('Are you sure you want to delete this customer and all their bookings/payments?')">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -173,51 +170,7 @@ $allRooms = $stmt->fetchAll();
             <!-- Room Management Section -->
             <section id="rooms" class="card">
                 <h2><i class="fas fa-door-open"></i> Room Management</h2>
-                
-                <div class="form-container">
-                    <form id="roomForm" method="POST">
-                        <input type="hidden" name="action" value="add_room">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="new_room_number">Room Number:</label>
-                                <input type="text" id="new_room_number" name="room_number" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="new_room_type">Room Type:</label>
-                                <select id="new_room_type" name="room_type" required>
-                                    <option value="">Select Type</option>
-                                    <option value="Standard">Standard</option>
-                                    <option value="Deluxe">Deluxe</option>
-                                    <option value="Suite">Suite</option>
-                                    <option value="Executive">Executive</option>
-                                    <option value="Presidential">Presidential</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="price_per_night">Price Per Night:</label>
-                                <input type="number" id="price_per_night" name="price_per_night" step="0.01" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="max_occupancy">Max Occupancy:</label>
-                                <input type="number" id="max_occupancy" name="max_occupancy" min="1" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="amenities">Amenities:</label>
-                            <textarea id="amenities" name="amenities" rows="3"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="description">Description:</label>
-                            <textarea id="description" name="description" rows="3"></textarea>
-                        </div>
-                        <button type="submit" class="btn">Add Room</button>
-                    </form>
-                </div>
-
                 <div class="table-container">
-                    <h3>Room Inventory</h3>
                     <table>
                         <thead>
                             <tr>
@@ -231,29 +184,29 @@ $allRooms = $stmt->fetchAll();
                         </thead>
                         <tbody>
                             <?php foreach ($allRooms as $room): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($room['room_number']) ?></td>
-                                <td><?= htmlspecialchars($room['room_type']) ?></td>
-                                <td>RS. <?= number_format($room['price_per_night'], 2) ?></td>
-                                <td><?= $room['max_occupancy'] ?></td>
-                                <td>
-                                    <span class="status-badge <?= $room['status'] ?>">
-                                        <?= ucfirst($room['status']) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <button onclick="editRoom(<?= $room['id'] ?>)" class="btn btn-edit">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <form method="POST" style="display:inline;">
-                                        <input type="hidden" name="action" value="delete_room">
-                                        <input type="hidden" name="id" value="<?= $room['id'] ?>">
-                                        <button type="submit" class="btn btn-danger">
-                                            <i class="fas fa-trash"></i> Delete
+                                <tr>
+                                    <td><?= htmlspecialchars($room['room_number']) ?></td>
+                                    <td><?= htmlspecialchars($room['room_type']) ?></td>
+                                    <td>RS. <?= number_format($room['price_per_night'], 2) ?></td>
+                                    <td><?= $room['max_occupancy'] ?></td>
+                                    <td>
+                                        <span class="status-badge <?= $room['status'] ?>">
+                                            <?= ucfirst($room['status']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button onclick="editRoom(<?= $room['id'] ?>)" class="btn btn-edit">
+                                            <i class="fas fa-edit"></i> Edit
                                         </button>
-                                    </form>
-                                </td>
-                            </tr>
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="action" value="delete_room">
+                                            <input type="hidden" name="id" value="<?= $room['id'] ?>">
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -271,9 +224,9 @@ $allRooms = $stmt->fetchAll();
                             <select id="customer_id" name="customer_id" required>
                                 <option value="">Select Customer</option>
                                 <?php foreach ($customers as $customer): ?>
-                                <option value="<?= $customer['id'] ?>">
-                                    <?= htmlspecialchars($customer['name']) ?> (Room: <?= htmlspecialchars($customer['room_number']) ?>)
-                                </option>
+                                    <option value="<?= $customer['id'] ?>">
+                                        <?= htmlspecialchars($customer['name']) ?> (Room: <?= htmlspecialchars($customer['room_number']) ?>)
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -314,33 +267,42 @@ $allRooms = $stmt->fetchAll();
                         </thead>
                         <tbody>
                             <?php foreach ($payments as $payment): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($payment['name']) ?></td>
-                                <td><?= htmlspecialchars($payment['room_number']) ?></td>
-                                <td>RS. <?= number_format($payment['amount'], 2) ?></td>
-                                <td>
-                                    <span class="payment-method">
-                                        <?php 
-                                        $method = $payment['payment_method'];
-                                        $icon = '';
-                                        switch($method) {
-                                            case 'credit_card': $icon = '<i class="fas fa-credit-card"></i>'; break;
-                                            case 'debit_card': $icon = '<i class="fas fa-credit-card"></i>'; break;
-                                            case 'bank_transfer': $icon = '<i class="fas fa-university"></i>'; break;
-                                            case 'cash': $icon = '<i class="fas fa-money-bill-wave"></i>'; break;
-                                            default: $icon = '<i class="fas fa-question-circle"></i>';
-                                        }
-                                        echo $icon . ' ' . ucfirst(str_replace('_', ' ', $method));
-                                        ?>
-                                    </span>
-                                </td>
-                                <td><?= date('M j, Y', strtotime($payment['payment_date'])) ?></td>
-                                <td>
-                                    <button onclick="printReceipt(<?= $payment['id'] ?>)" class="btn btn-receipt">
-                                        <i class="fas fa-print"></i> Print
-                                    </button>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td><?= htmlspecialchars($payment['name']) ?></td>
+                                    <td><?= htmlspecialchars($payment['room_number']) ?></td>
+                                    <td>RS. <?= number_format($payment['amount'], 2) ?></td>
+                                    <td>
+                                        <span class="payment-method">
+                                            <?php
+                                            $method = $payment['payment_method'];
+                                            $icon = '';
+                                            switch ($method) {
+                                                case 'credit_card':
+                                                    $icon = '<i class="fas fa-credit-card"></i>';
+                                                    break;
+                                                case 'debit_card':
+                                                    $icon = '<i class="fas fa-credit-card"></i>';
+                                                    break;
+                                                case 'bank_transfer':
+                                                    $icon = '<i class="fas fa-university"></i>';
+                                                    break;
+                                                case 'cash':
+                                                    $icon = '<i class="fas fa-money-bill-wave"></i>';
+                                                    break;
+                                                default:
+                                                    $icon = '<i class="fas fa-question-circle"></i>';
+                                            }
+                                            echo $icon . ' ' . ucfirst(str_replace('_', ' ', $method));
+                                            ?>
+                                        </span>
+                                    </td>
+                                    <td><?= date('M j, Y', strtotime($payment['payment_date'])) ?></td>
+                                    <td>
+                                        <button onclick="printReceipt(<?= $payment['id'] ?>)" class="btn btn-receipt">
+                                            <i class="fas fa-print"></i> Print
+                                        </button>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot>
@@ -357,113 +319,55 @@ $allRooms = $stmt->fetchAll();
             <!-- Booking Section -->
             <section id="bookings" class="card">
                 <h2><i class="fas fa-calendar-alt"></i> Room Booking</h2>
-                <div class="booking-container">
-                    <div class="calendar-container">
-                        <div id="calendar"></div>
-                    </div>
-                    <div class="booking-form">
-                        <form id="bookingForm" method="POST">
-                            <input type="hidden" name="action" value="add_booking">
-                            <input type="hidden" id="selected_date" name="booking_date">
-                            <div class="form-group">
-                                <label for="booking_customer_id">Customer:</label>
-                                <select id="booking_customer_id" name="customer_id" required>
-                                    <option value="">Select Customer</option>
-                                    <?php foreach ($customers as $customer): ?>
-                                    <option value="<?= $customer['id'] ?>">
-                                        <?= htmlspecialchars($customer['name']) ?>
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="booking_room_number">Room Number:</label>
-                                <select id="booking_room_number" name="room_number" required>
-                                    <option value="">Select Room</option>
-                                    <?php foreach ($availableRooms as $room): ?>
-                                    <option value="<?= $room['room_number'] ?>" data-type="<?= $room['room_type'] ?>">
-                                        <?= $room['room_number'] ?> (<?= $room['room_type'] ?>)
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <input type="hidden" id="booking_room_type" name="room_type">
-                            </div>
-                            <button type="submit" class="btn">Confirm Booking</button>
-                        </form>
-                    </div>
-                </div>
-
                 <!-- Upcoming Bookings Table -->
-<div class="table-container">
-    <h3>Upcoming Bookings</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Customer</th>
-                <th>Phone</th>
-                <th>Room No.</th>
-                <th>Room Type</th>
-                <th>Booking Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($upcomingBookings as $booking): ?>
-            <tr>
-                <td><?= htmlspecialchars($booking['name']) ?></td>
-                <td><?= htmlspecialchars($booking['phone']) ?></td>
-                <td><?= htmlspecialchars($booking['room_number']) ?></td>
-                <td><?= htmlspecialchars($booking['room_type']) ?></td>
-                <td><?= date('M j, Y', strtotime($booking['booking_date'])) ?></td>
-                <td>
-                    <span class="status-badge <?= $booking['status'] ?>">
-                        <?= ucfirst($booking['status']) ?>
-                    </span>
-                </td>
-                <td>
-                    <form method="POST" style="display:inline;">
-                        <input type="hidden" name="action" value="cancel_booking">
-                        <input type="hidden" name="id" value="<?= $booking['id'] ?>">
-                        <button type="submit" class="btn btn-warning" 
-                                onclick="return confirm('Are you sure you want to cancel this booking?')">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
+                <div class="table-container">
+                    <h3>Upcoming Bookings</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 150px;">Customer</th>
+                                <th>Phone</th>
+                                <th style="width: 150px;">Room Type</th>
+                                <th style="width: 150px;">Check-In</th>
+                                <th style="width: 150px;">Check-out</th>
+                                <th>Guests</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($upcomingBookings as $booking): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($booking['name']) ?></td>
+                                    <td><?= htmlspecialchars($booking['phone']) ?></td>
+                                    <td><?= htmlspecialchars($booking['room_type']) ?></td>
+                                    <td><?= date('M j, Y', strtotime($booking['checkin_date'])) ?></td>
+                                    <td><?= date('M j, Y', strtotime($booking['checkout_date'])) ?></td>
+                                    <td>
+                                        <?= $booking['adults'] ?> Adult<?= $booking['adults'] > 1 ? 's' : '' ?>
+                                        <?= $booking['children'] > 0 ? ' + ' . $booking['children'] . ' Child' . ($booking['children'] > 1 ? 'ren' : '') : '' ?>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge <?= $booking['status'] ?>">
+                                            <?= ucfirst($booking['status']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="action" value="cancel_booking">
+                                            <input type="hidden" name="id" value="<?= $booking['id'] ?>">
+                                            <button type="submit" class="btn btn-warning"
+                                                onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
             <!-- Reports Section -->
             <section id="reports" class="card">
                 <h2><i class="fas fa-chart-line"></i> Reports</h2>
@@ -486,7 +390,7 @@ $allRooms = $stmt->fetchAll();
                         <h3>Room Occupancy</h3>
                         <div class="occupancy-display">
                             <span class="rate">
-                                <?php 
+                                <?php
                                 $totalRooms = count($allRooms);
                                 $occupiedRooms = count(array_filter($allRooms, fn($room) => $room['status'] === 'occupied'));
                                 $occupancyRate = $totalRooms > 0 ? ($occupiedRooms / $totalRooms) * 100 : 0;
@@ -523,12 +427,12 @@ $allRooms = $stmt->fetchAll();
                             ");
                             $monthlyHistory = $stmt->fetchAll();
                             foreach ($monthlyHistory as $history): ?>
-                            <tr>
-                                <td><?= date('F Y', strtotime($history['month'] . '-01')) ?></td>
-                                <td>RS. <?= number_format($history['total'], 2) ?></td>
-                                <td><?= $history['count'] ?></td>
-                                <td>RS. <?= number_format($history['average'], 2) ?></td>
-                            </tr>
+                                <tr>
+                                    <td><?= date('F Y', strtotime($history['month'] . '-01')) ?></td>
+                                    <td>RS. <?= number_format($history['total'], 2) ?></td>
+                                    <td><?= $history['count'] ?></td>
+                                    <td>RS. <?= number_format($history['average'], 2) ?></td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -546,4 +450,5 @@ $allRooms = $stmt->fetchAll();
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>
