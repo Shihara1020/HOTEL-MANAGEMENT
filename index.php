@@ -346,11 +346,7 @@ $allRooms = $stmt->fetchAll();
                                         <?= $booking['adults'] ?> Adult<?= $booking['adults'] > 1 ? 's' : '' ?>
                                         <?= $booking['children'] > 0 ? ' + ' . $booking['children'] . ' Child' . ($booking['children'] > 1 ? 'ren' : '') : '' ?>
                                     </td>
-                                    <td>
-                                        <span class="status-badge <?= $booking['status'] ?>">
-                                            <?= ucfirst($booking['status']) ?>
-                                        </span>
-                                    </td>
+                                    
                                     <td>
                                         <form method="POST" style="display:inline;">
                                             <input type="hidden" name="action" value="cancel_booking">
